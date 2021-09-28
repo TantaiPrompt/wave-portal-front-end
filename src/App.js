@@ -7,7 +7,7 @@ import "./App.css";
 
 const App = () => {
   const [currentAccount,setCurrentAccount] = useState("");
-  const contractAddress ="0x51f68b9D2Bb02271Ae2bFE82Eb3e784e838F51b1"
+  const contractAddress ="0x23Ab0AC3C65aBcc9b8dC8648176Ae07E1A7C3e71"
   const [count,setCount] = useState(null);
   const [allWaves, setAllWaves] = useState([]);
   const [details, setDetails] = useState('');
@@ -67,7 +67,7 @@ const App = () => {
         const waveportalContract = new ethers.Contract(contractAddress, contractABI, signer);
         let x = await waveportalContract.getTotalWaves();
         console.log("Retrieved total wave count...", x.toNumber());
-        const waveTxn = await waveportalContract.wave(details);
+        const waveTxn = await waveportalContract.wave(details,{ gasLimit: 300000 });
         console.log("Mining...", waveTxn.hash);
 
         await waveTxn.wait();
@@ -76,7 +76,8 @@ const App = () => {
         x = await waveportalContract.getTotalWaves();
         console.log("Retrieved total wave count...", x.toNumber());
         // setCount(x.toNumber());
-        getAllWaves();
+        // getAllWaves();
+        
         
       } else {
         console.log("Ethereum object doesn't exist!");
@@ -120,6 +121,18 @@ const App = () => {
          * Store our data in React State
          */
         setAllWaves(wavesCleaned);
+               /**
+         * Listen in for emitter events!
+         */
+        wavePortalContract.on("NewWave", (from, timestamp, message) => {
+          console.log("NewWave", from, timestamp, message);
+
+          setAllWaves(prevState => [...prevState, {
+            address: from,
+            timestamp: new Date(timestamp * 1000),
+            message: message
+          }]);
+        });
       } else {
         console.log("Ethereum object doesn't exist!")
       }
